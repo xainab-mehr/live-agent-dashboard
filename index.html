@@ -6,7 +6,7 @@
 <title>CryoFuture — Live Agent Monitor</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap');
-
+ 
   :root {
     --bg: #0a0c0f;
     --surface: #111418;
@@ -28,9 +28,9 @@
     --user-bubble: #1a2a1a;
     --human-bubble: #2a1a36;
   }
-
+ 
   * { box-sizing: border-box; margin: 0; padding: 0; }
-
+ 
   body {
     background: var(--bg);
     color: var(--text);
@@ -40,7 +40,7 @@
     display: flex;
     flex-direction: column;
   }
-
+ 
   .topbar {
     display: flex;
     align-items: center;
@@ -49,13 +49,13 @@
     border-bottom: 1px solid var(--border);
     background: var(--surface);
   }
-
+ 
   .topbar-left {
     display: flex;
     align-items: center;
     gap: 12px;
   }
-
+ 
   .logo {
     font-family: 'IBM Plex Mono', monospace;
     font-size: 13px;
@@ -63,20 +63,20 @@
     letter-spacing: 0.08em;
     color: var(--accent);
   }
-
+ 
   .divider-v {
     width: 1px;
     height: 18px;
     background: var(--border2);
   }
-
+ 
   .page-title {
     font-size: 13px;
     font-weight: 500;
     color: var(--text-dim);
     letter-spacing: 0.03em;
   }
-
+ 
   .status-pill {
     display: flex;
     align-items: center;
@@ -89,20 +89,20 @@
     letter-spacing: 0.05em;
     transition: all 0.2s;
   }
-
+ 
   .status-pill.disconnected { background: var(--surface2); color: var(--text-dim); border: 1px solid var(--border2); }
   .status-pill.connecting { background: var(--amber-dim); color: var(--amber); border: 1px solid var(--amber); }
   .status-pill.connected { background: var(--green-dim); color: var(--green); border: 1px solid var(--green); }
   .status-pill.takeover { background: var(--human-bubble); color: #c084fc; border: 1px solid #7c3aed; }
-
+ 
   .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
   .dot.pulse { animation: pulse 1.5s infinite; }
-
+ 
   @keyframes pulse {
     0%, 100% { opacity: 1; }
     50% { opacity: 0.3; }
   }
-
+ 
   .main {
     display: grid;
     grid-template-columns: 300px 1fr;
@@ -110,7 +110,7 @@
     overflow: hidden;
     height: calc(100vh - 53px);
   }
-
+ 
   .left-panel {
     border-right: 1px solid var(--border);
     display: flex;
@@ -118,12 +118,12 @@
     background: var(--surface);
     overflow-y: auto;
   }
-
+ 
   .panel-section {
     padding: 20px;
     border-bottom: 1px solid var(--border);
   }
-
+ 
   .section-label {
     font-family: 'IBM Plex Mono', monospace;
     font-size: 10px;
@@ -133,10 +133,10 @@
     text-transform: uppercase;
     margin-bottom: 14px;
   }
-
+ 
   .field { margin-bottom: 12px; }
   .field:last-child { margin-bottom: 0; }
-
+ 
   label {
     display: block;
     font-size: 11px;
@@ -145,7 +145,7 @@
     margin-bottom: 5px;
     letter-spacing: 0.03em;
   }
-
+ 
   input, textarea {
     width: 100%;
     background: var(--bg);
@@ -158,10 +158,10 @@
     outline: none;
     transition: border-color 0.15s;
   }
-
+ 
   input:focus, textarea:focus { border-color: var(--accent); }
   input::placeholder, textarea::placeholder { color: var(--text-muted); }
-
+ 
   .btn {
     display: inline-flex;
     align-items: center;
@@ -178,7 +178,7 @@
     width: 100%;
     letter-spacing: 0.01em;
   }
-
+ 
   .btn:disabled { opacity: 0.35; cursor: not-allowed; }
   .btn-primary { background: var(--accent); color: white; }
   .btn-primary:hover:not(:disabled) { background: #2563eb; }
@@ -189,7 +189,7 @@
   .btn-ghost { background: var(--surface2); color: var(--text-dim); border: 1px solid var(--border2); }
   .btn-ghost:hover:not(:disabled) { background: var(--border2); color: var(--text); }
   .btn-sm { padding: 7px 12px; font-size: 12px; }
-
+ 
   .takeover-banner {
     margin: 16px 20px 0;
     padding: 10px 14px;
@@ -202,15 +202,15 @@
     align-items: center;
     gap: 8px;
   }
-
+ 
   .takeover-banner.visible { display: flex; }
-
+ 
   .right-panel {
     display: flex;
     flex-direction: column;
     overflow: hidden;
   }
-
+ 
   .feed-header {
     padding: 16px 24px;
     border-bottom: 1px solid var(--border);
@@ -220,7 +220,7 @@
     background: var(--surface);
     flex-shrink: 0;
   }
-
+ 
   .feed-title {
     font-family: 'IBM Plex Mono', monospace;
     font-size: 11px;
@@ -229,13 +229,13 @@
     color: var(--text-dim);
     text-transform: uppercase;
   }
-
+ 
   .conv-id {
     font-family: 'IBM Plex Mono', monospace;
     font-size: 11px;
     color: var(--text-muted);
   }
-
+ 
   .feed {
     flex: 1;
     overflow-y: auto;
@@ -244,11 +244,11 @@
     flex-direction: column;
     gap: 12px;
   }
-
+ 
   .feed::-webkit-scrollbar { width: 4px; }
   .feed::-webkit-scrollbar-track { background: transparent; }
   .feed::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
-
+ 
   .empty-state {
     flex: 1;
     display: flex;
@@ -259,9 +259,9 @@
     gap: 10px;
     font-size: 13px;
   }
-
+ 
   .empty-icon { font-size: 32px; opacity: 0.3; }
-
+ 
   .message {
     display: flex;
     flex-direction: column;
@@ -269,18 +269,18 @@
     animation: fadeIn 0.2s ease;
     max-width: 75%;
   }
-
+ 
   @keyframes fadeIn {
     from { opacity: 0; transform: translateY(4px); }
     to { opacity: 1; transform: translateY(0); }
   }
-
+ 
   .message.agent { align-self: flex-start; }
   .message.user { align-self: flex-end; }
   .message.human { align-self: flex-start; }
   .message.system { align-self: center; max-width: 100%; }
   .message.event { align-self: center; max-width: 100%; }
-
+ 
   .msg-label {
     font-family: 'IBM Plex Mono', monospace;
     font-size: 10px;
@@ -289,11 +289,11 @@
     color: var(--text-muted);
     padding: 0 4px;
   }
-
+ 
   .message.user .msg-label { text-align: right; }
   .message.human .msg-label { color: #7c3aed; }
   .message.system .msg-label { text-align: center; }
-
+ 
   .msg-bubble {
     padding: 10px 14px;
     border-radius: 10px;
@@ -301,11 +301,11 @@
     line-height: 1.5;
     white-space: pre-wrap;
   }
-
+ 
   .message.agent .msg-bubble { background: var(--agent-bubble); border: 1px solid var(--border2); border-top-left-radius: 3px; }
   .message.user .msg-bubble { background: var(--user-bubble); border: 1px solid #1a3a1a; border-top-right-radius: 3px; }
   .message.human .msg-bubble { background: var(--human-bubble); border: 1px solid #7c3aed; border-top-left-radius: 3px; }
-
+ 
   .msg-event {
     font-family: 'IBM Plex Mono', monospace;
     font-size: 11px;
@@ -315,7 +315,7 @@
     border-radius: 20px;
     border: 1px solid var(--border);
   }
-
+ 
   .msg-time {
     font-family: 'IBM Plex Mono', monospace;
     font-size: 10px;
@@ -324,20 +324,20 @@
   }
   .message.user .msg-time { text-align: right; }
   .message.system .msg-time { text-align: center; }
-
+ 
   .input-area {
     padding: 16px 24px;
     border-top: 1px solid var(--border);
     background: var(--surface);
     flex-shrink: 0;
   }
-
+ 
   .input-row {
     display: flex;
     gap: 10px;
     align-items: flex-end;
   }
-
+ 
   .input-row textarea {
     flex: 1;
     resize: none;
@@ -350,7 +350,7 @@
     font-family: 'IBM Plex Sans', sans-serif;
     font-size: 13px;
   }
-
+ 
   .send-btn {
     background: var(--accent);
     color: white;
@@ -366,12 +366,12 @@
     transition: background 0.15s;
     font-size: 16px;
   }
-
+ 
   .send-btn:hover:not(:disabled) { background: #2563eb; }
   .send-btn:disabled { opacity: 0.3; cursor: not-allowed; }
-
+ 
   .input-hint { font-size: 11px; color: var(--text-muted); margin-top: 7px; }
-
+ 
   .raw-log {
     border-top: 1px solid var(--border);
     background: var(--bg);
@@ -381,7 +381,7 @@
     display: flex;
     flex-direction: column;
   }
-
+ 
   .raw-log-header {
     padding: 8px 24px;
     display: flex;
@@ -389,7 +389,7 @@
     justify-content: space-between;
     border-bottom: 1px solid var(--border);
   }
-
+ 
   .raw-log-title {
     font-family: 'IBM Plex Mono', monospace;
     font-size: 10px;
@@ -398,7 +398,7 @@
     color: var(--text-muted);
     text-transform: uppercase;
   }
-
+ 
   .raw-log-body {
     overflow-y: auto;
     padding: 8px 24px;
@@ -408,10 +408,10 @@
     line-height: 1.6;
     flex: 1;
   }
-
+ 
   .raw-log-body::-webkit-scrollbar { width: 3px; }
   .raw-log-body::-webkit-scrollbar-thumb { background: var(--border); }
-
+ 
   .log-line { margin-bottom: 2px; }
   .log-line .ts { color: var(--text-muted); margin-right: 8px; }
   .log-line .tag { color: var(--accent); margin-right: 6px; }
@@ -420,7 +420,7 @@
 </style>
 </head>
 <body>
-
+ 
 <div class="topbar">
   <div class="topbar-left">
     <span class="logo">CRYOFUTURE</span>
@@ -432,7 +432,7 @@
     <span id="statusText">DISCONNECTED</span>
   </div>
 </div>
-
+ 
 <div class="main">
   <div class="left-panel">
     <div class="panel-section">
@@ -449,7 +449,7 @@
         <button class="btn btn-primary" id="connectBtn" onclick="connect()">Connect</button>
       </div>
     </div>
-
+ 
     <div class="panel-section">
       <div class="section-label">Agent Controls</div>
       <div class="field" style="margin-bottom:10px;">
@@ -463,7 +463,7 @@
         </button>
       </div>
     </div>
-
+ 
     <div class="panel-section">
       <div class="section-label">Contextual Update</div>
       <div class="field">
@@ -472,7 +472,7 @@
       </div>
       <button class="btn btn-ghost btn-sm" onclick="sendContextualUpdate()" id="ctxBtn" disabled>Send Update to Agent</button>
     </div>
-
+ 
     <div class="panel-section" style="border-bottom: none;">
       <div class="section-label">Hours Check</div>
       <div id="hoursStatus" style="font-size:12px; color: var(--text-dim); line-height:1.6;">
@@ -481,24 +481,24 @@
       </div>
     </div>
   </div>
-
+ 
   <div class="right-panel">
     <div class="feed-header">
       <span class="feed-title">Conversation Feed</span>
       <span class="conv-id" id="convIdDisplay">—</span>
     </div>
-
+ 
     <div class="feed" id="feed">
       <div class="empty-state" id="emptyState">
         <div class="empty-icon">📡</div>
         <div>Connect to a conversation to begin monitoring</div>
       </div>
     </div>
-
+ 
     <div class="takeover-banner" id="takeoverBanner">
       👤 Human takeover active — you are now speaking directly to the patient
     </div>
-
+ 
     <div class="input-area">
       <div class="input-row">
         <textarea id="msgInput" placeholder="Type a message as human operator..." disabled
@@ -507,7 +507,7 @@
       </div>
       <div class="input-hint" id="inputHint">Enable human takeover to send messages to the patient</div>
     </div>
-
+ 
     <div class="raw-log">
       <div class="raw-log-header">
         <span class="raw-log-title">Raw Event Log</span>
@@ -517,13 +517,13 @@
     </div>
   </div>
 </div>
-
+ 
 <script>
   let ws = null;
   let isTakeover = false;
   let isConnected = false;
   let eventCount = 0;
-
+ 
   function checkHours() {
     const now = new Date();
     const pt = new Date(now.toLocaleString('en-US', { timeZone: 'America/Los_Angeles' }));
@@ -535,10 +535,10 @@
     document.getElementById('hoursIcon').textContent = inHours ? '🟢' : '🔴';
     document.getElementById('hoursLabel').textContent = inHours ? 'Within business hours' : 'Outside business hours';
   }
-
+ 
   checkHours();
   setInterval(checkHours, 30000);
-
+ 
   function setStatus(state) {
     const pill = document.getElementById('statusPill');
     const dot = pill.querySelector('.dot');
@@ -548,13 +548,13 @@
     const labels = { disconnected: 'DISCONNECTED', connecting: 'CONNECTING...', connected: 'MONITORING', takeover: 'HUMAN ACTIVE' };
     text.textContent = labels[state] || state.toUpperCase();
   }
-
+ 
   function addMessage(type, text, timestamp) {
     const feed = document.getElementById('feed');
     document.getElementById('emptyState')?.remove();
     const ts = timestamp || new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
     const labels = { agent: 'AI AGENT', user: 'PATIENT', human: 'YOU (HUMAN)', system: 'SYSTEM' };
-
+ 
     if (type === 'event') {
       const el = document.createElement('div');
       el.className = 'message event';
@@ -572,7 +572,7 @@
     }
     feed.scrollTop = feed.scrollHeight;
   }
-
+ 
   function addRawLog(tag, tagClass, content) {
     const log = document.getElementById('rawLog');
     const ts = new Date().toLocaleTimeString('en-US', { hour12: false });
@@ -584,32 +584,32 @@
     eventCount++;
     document.getElementById('eventCount').textContent = `${eventCount} events`;
   }
-
+ 
   function escapeHtml(str) {
     return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   }
-
+ 
   function connect() {
     const apiKey = document.getElementById('apiKey').value.trim();
     const convId = document.getElementById('convId').value.trim();
-
+ 
     if (!apiKey || !convId) {
       addRawLog('ERROR', 'err', 'API key and Conversation ID are required');
       return;
     }
-
+ 
     if (ws) { ws.close(); }
-
+ 
     setStatus('connecting');
     document.getElementById('convIdDisplay').textContent = convId;
     document.getElementById('connectBtn').disabled = true;
-
+ 
     addMessage('event', `Connecting to conversation ${convId}...`);
     addRawLog('WS', '', `Attempting connection to conv ${convId}`);
-
+ 
     simulateConnection(convId);
   }
-
+ 
   function simulateConnection(convId) {
     setTimeout(() => {
       isConnected = true;
@@ -620,11 +620,11 @@
       document.getElementById('takeoverBtn').disabled = false;
       document.getElementById('endCallBtn').disabled = false;
       document.getElementById('ctxBtn').disabled = false;
-
+ 
       addMessage('event', `✓ Connected — monitoring ${convId}`);
       addRawLog('WS', 'ok', 'Connection established');
       addRawLog('EVT', '', '{"type":"conversation_initiated","conversation_id":"' + convId + '"}');
-
+ 
       setTimeout(() => addMessage('agent', "Hi! Thank you for calling CryoFuture. I'm Alex. Can I get your name and date of birth to get started?", '10:32:01 AM'), 1000);
       setTimeout(() => { addRawLog('EVT', '', '{"type":"agent_response","text":"Hi! Thank you for calling..."}'); }, 1100);
       setTimeout(() => addMessage('user', "Hi, yes — my name is Sarah Miller, date of birth is March 12th 1989.", '10:32:18 AM'), 3000);
@@ -635,7 +635,7 @@
       setTimeout(() => { addMessage('event', '⚡ requestLiveAgent tool called — alert sent to team'); addRawLog('TOOL', 'ok', '{"tool":"requestLiveAgent","reason":"Patient requested human agent"}'); }, 10500);
     }, 800);
   }
-
+ 
   function disconnect() {
     if (ws) { ws.close(); ws = null; }
     isConnected = false;
@@ -654,17 +654,17 @@
     addMessage('event', 'Disconnected from monitoring session');
     addRawLog('WS', 'err', 'Connection closed');
   }
-
+ 
   function toggleTakeover() {
     if (!isConnected) return;
     isTakeover = !isTakeover;
-
+ 
     const btn = document.getElementById('takeoverBtn');
     const banner = document.getElementById('takeoverBanner');
     const msgInput = document.getElementById('msgInput');
     const sendBtn = document.getElementById('sendBtn');
     const hint = document.getElementById('inputHint');
-
+ 
     if (isTakeover) {
       btn.textContent = '🤖 Return to AI Agent';
       btn.className = 'btn btn-ghost';
@@ -687,7 +687,7 @@
       addRawLog('CMD', 'ok', '{"command_type":"disable_human_takeover"}');
     }
   }
-
+ 
   function sendHumanMessage() {
     const input = document.getElementById('msgInput');
     const text = input.value.trim();
@@ -697,7 +697,7 @@
     input.value = '';
     input.style.height = '42px';
   }
-
+ 
   function sendContextualUpdate() {
     const input = document.getElementById('ctxInput');
     const text = input.value.trim();
@@ -706,14 +706,14 @@
     addRawLog('CMD', 'ok', '{"command_type":"contextual_update","parameters":{"contextual_update":"' + text.replace(/"/g, '\\"') + '"}}');
     input.value = '';
   }
-
+ 
   function endCall() {
     if (!isConnected) return;
     addMessage('event', '✕ End call command sent');
     addRawLog('CMD', 'ok', '{"command_type":"end_call"}');
     setTimeout(() => disconnect(), 600);
   }
-
+ 
   function handleKeydown(e) {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -723,6 +723,35 @@
     ta.style.height = 'auto';
     ta.style.height = Math.min(ta.scrollHeight, 120) + 'px';
   }
+ 
+  // Auto-fill conversation ID from URL ?conv= parameter
+  (function autoConnectFromURL() {
+    const params = new URLSearchParams(window.location.search);
+    const convId = params.get('conv');
+    if (!convId) return;
+ 
+    // Pre-fill the conversation ID field
+    document.getElementById('convId').value = convId;
+ 
+    // Show a banner prompting operator to enter API key then connect
+    const banner = document.createElement('div');
+    banner.id = 'autoConnectBanner';
+    banner.style.cssText = `
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      background: #1d3a6e; border-bottom: 1px solid #3b82f6;
+      padding: 10px 24px; display: flex; align-items: center;
+      justify-content: space-between; font-size: 13px; color: #93c5fd;
+      font-family: 'IBM Plex Sans', sans-serif;
+    `;
+    banner.innerHTML = `
+      <span>⚡ Live conversation detected — enter your API key and click <strong>Connect</strong> to join</span>
+      <button onclick="document.getElementById('autoConnectBanner').remove()" style="background:none;border:none;color:#93c5fd;cursor:pointer;font-size:16px;">✕</button>
+    `;
+    document.body.prepend(banner);
+ 
+    // Scroll left panel into view and focus API key field
+    document.getElementById('apiKey').focus();
+  })();
 </script>
 </body>
 </html>
