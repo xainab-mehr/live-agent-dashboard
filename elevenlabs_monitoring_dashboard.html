@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>CryoFuture — Live Agent Monitor</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap');
+
+  :root {
+    --bg: #0a0c0f;
+    --surface: #111418;
+    --surface2: #181c22;
+    --border: #1e2530;
+    --border2: #252d38;
+    --text: #e2e8f0;
+    --text-dim: #64748b;
+    --text-muted: #334155;
+    --accent: #3b82f6;
+    --accent-dim: #1d3a6e;
+    --green: #22c55e;
+    --green-dim: #14532d;
+    --red: #ef4444;
+    --red-dim: #4c1d1d;
+    --amber: #f59e0b;
+    --amber-dim: #451a03;
+    --agent-bubble: #1a2236;
+    --user-bubble: #1a2a1a;
+    --human-bubble: #2a1a36;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 14px;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 24px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+  }
+
+  .topbar-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .logo {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    color: var(--accent);
+  }
+
+  .divider-v {
+    width: 1px;
+    height: 18px;
+    background: var(--border2);
+  }
+
+  .page-title {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-dim);
+    letter-spacing: 0.03em;
+  }
+
+  .status-pill {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+    padding: 4px 10px;
+    border-radius: 20px;
+    letter-spacing: 0.05em;
+    transition: all 0.2s;
+  }
+
+  .status-pill.disconnected { background: var(--surface2); color: var(--text-dim); border: 1px solid var(--border2); }
+  .status-pill.connecting { background: var(--amber-dim); color: var(--amber); border: 1px solid var(--amber); }
+  .status-pill.connected { background: var(--green-dim); color: var(--green); border: 1px solid var(--green); }
+  .status-pill.takeover { background: var(--human-bubble); color: #c084fc; border: 1px solid #7c3aed; }
+
+  .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  .dot.pulse { animation: pulse 1.5s infinite; }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  .main {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    flex: 1;
+    overflow: hidden;
+    height: calc(100vh - 53px);
+  }
+
+  .left-panel {
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    background: var(--surface);
+    overflow-y: auto;
+  }
+
+  .panel-section {
+    padding: 20px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .section-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    margin-bottom: 14px;
+  }
+
+  .field { margin-bottom: 12px; }
+  .field:last-child { margin-bottom: 0; }
+
+  label {
+    display: block;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-dim);
+    margin-bottom: 5px;
+    letter-spacing: 0.03em;
+  }
+
+  input, textarea {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border2);
+    border-radius: 6px;
+    color: var(--text);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    padding: 8px 10px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  input:focus, textarea:focus { border-color: var(--accent); }
+  input::placeholder, textarea::placeholder { color: var(--text-muted); }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    padding: 9px 16px;
+    border-radius: 6px;
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    border: none;
+    transition: all 0.15s;
+    width: 100%;
+    letter-spacing: 0.01em;
+  }
+
+  .btn:disabled { opacity: 0.35; cursor: not-allowed; }
+  .btn-primary { background: var(--accent); color: white; }
+  .btn-primary:hover:not(:disabled) { background: #2563eb; }
+  .btn-danger { background: var(--red-dim); color: var(--red); border: 1px solid var(--red); }
+  .btn-danger:hover:not(:disabled) { background: #5a1f1f; }
+  .btn-purple { background: #2d1b4e; color: #c084fc; border: 1px solid #7c3aed; }
+  .btn-purple:hover:not(:disabled) { background: #3d2060; }
+  .btn-ghost { background: var(--surface2); color: var(--text-dim); border: 1px solid var(--border2); }
+  .btn-ghost:hover:not(:disabled) { background: var(--border2); color: var(--text); }
+  .btn-sm { padding: 7px 12px; font-size: 12px; }
+
+  .takeover-banner {
+    margin: 16px 20px 0;
+    padding: 10px 14px;
+    background: var(--human-bubble);
+    border: 1px solid #7c3aed;
+    border-radius: 6px;
+    font-size: 12px;
+    color: #c084fc;
+    display: none;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .takeover-banner.visible { display: flex; }
+
+  .right-panel {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .feed-header {
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--surface);
+    flex-shrink: 0;
+  }
+
+  .feed-title {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    color: var(--text-dim);
+    text-transform: uppercase;
+  }
+
+  .conv-id {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+
+  .feed {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .feed::-webkit-scrollbar { width: 4px; }
+  .feed::-webkit-scrollbar-track { background: transparent; }
+  .feed::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+  .empty-state {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    gap: 10px;
+    font-size: 13px;
+  }
+
+  .empty-icon { font-size: 32px; opacity: 0.3; }
+
+  .message {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    animation: fadeIn 0.2s ease;
+    max-width: 75%;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .message.agent { align-self: flex-start; }
+  .message.user { align-self: flex-end; }
+  .message.human { align-self: flex-start; }
+  .message.system { align-self: center; max-width: 100%; }
+  .message.event { align-self: center; max-width: 100%; }
+
+  .msg-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+    padding: 0 4px;
+  }
+
+  .message.user .msg-label { text-align: right; }
+  .message.human .msg-label { color: #7c3aed; }
+  .message.system .msg-label { text-align: center; }
+
+  .msg-bubble {
+    padding: 10px 14px;
+    border-radius: 10px;
+    font-size: 13px;
+    line-height: 1.5;
+    white-space: pre-wrap;
+  }
+
+  .message.agent .msg-bubble { background: var(--agent-bubble); border: 1px solid var(--border2); border-top-left-radius: 3px; }
+  .message.user .msg-bubble { background: var(--user-bubble); border: 1px solid #1a3a1a; border-top-right-radius: 3px; }
+  .message.human .msg-bubble { background: var(--human-bubble); border: 1px solid #7c3aed; border-top-left-radius: 3px; }
+
+  .msg-event {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--text-muted);
+    background: var(--surface2);
+    padding: 5px 12px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+  }
+
+  .msg-time {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    color: var(--text-muted);
+    padding: 0 4px;
+  }
+  .message.user .msg-time { text-align: right; }
+  .message.system .msg-time { text-align: center; }
+
+  .input-area {
+    padding: 16px 24px;
+    border-top: 1px solid var(--border);
+    background: var(--surface);
+    flex-shrink: 0;
+  }
+
+  .input-row {
+    display: flex;
+    gap: 10px;
+    align-items: flex-end;
+  }
+
+  .input-row textarea {
+    flex: 1;
+    resize: none;
+    height: 42px;
+    min-height: 42px;
+    max-height: 120px;
+    line-height: 1.5;
+    padding: 10px 12px;
+    border-radius: 8px;
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 13px;
+  }
+
+  .send-btn {
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    width: 42px;
+    height: 42px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: background 0.15s;
+    font-size: 16px;
+  }
+
+  .send-btn:hover:not(:disabled) { background: #2563eb; }
+  .send-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+  .input-hint { font-size: 11px; color: var(--text-muted); margin-top: 7px; }
+
+  .raw-log {
+    border-top: 1px solid var(--border);
+    background: var(--bg);
+    flex-shrink: 0;
+    max-height: 140px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .raw-log-header {
+    padding: 8px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .raw-log-title {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    color: var(--text-muted);
+    text-transform: uppercase;
+  }
+
+  .raw-log-body {
+    overflow-y: auto;
+    padding: 8px 24px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--text-dim);
+    line-height: 1.6;
+    flex: 1;
+  }
+
+  .raw-log-body::-webkit-scrollbar { width: 3px; }
+  .raw-log-body::-webkit-scrollbar-thumb { background: var(--border); }
+
+  .log-line { margin-bottom: 2px; }
+  .log-line .ts { color: var(--text-muted); margin-right: 8px; }
+  .log-line .tag { color: var(--accent); margin-right: 6px; }
+  .log-line .tag.err { color: var(--red); }
+  .log-line .tag.ok { color: var(--green); }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-left">
+    <span class="logo">CRYOFUTURE</span>
+    <div class="divider-v"></div>
+    <span class="page-title">Live Agent Monitor</span>
+  </div>
+  <div id="statusPill" class="status-pill disconnected">
+    <div class="dot"></div>
+    <span id="statusText">DISCONNECTED</span>
+  </div>
+</div>
+
+<div class="main">
+  <div class="left-panel">
+    <div class="panel-section">
+      <div class="section-label">Connection</div>
+      <div class="field">
+        <label>ElevenLabs API Key</label>
+        <input type="password" id="apiKey" placeholder="xi-..." />
+      </div>
+      <div class="field">
+        <label>Conversation ID</label>
+        <input type="text" id="convId" placeholder="conv_..." />
+      </div>
+      <div style="margin-top:14px;">
+        <button class="btn btn-primary" id="connectBtn" onclick="connect()">Connect</button>
+      </div>
+    </div>
+
+    <div class="panel-section">
+      <div class="section-label">Agent Controls</div>
+      <div class="field" style="margin-bottom:10px;">
+        <button class="btn btn-purple" id="takeoverBtn" onclick="toggleTakeover()" disabled>
+          👤 Enable Human Takeover
+        </button>
+      </div>
+      <div class="field">
+        <button class="btn btn-danger btn-sm" id="endCallBtn" onclick="endCall()" disabled>
+          ✕ &nbsp;End Call
+        </button>
+      </div>
+    </div>
+
+    <div class="panel-section">
+      <div class="section-label">Contextual Update</div>
+      <div class="field">
+        <label>Inject context into agent</label>
+        <textarea id="ctxInput" rows="3" placeholder="e.g. Patient confirmed insurance is Sunfish — route to manual handling." style="height:72px; resize:none; font-family: 'IBM Plex Sans', sans-serif; font-size: 12px;"></textarea>
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="sendContextualUpdate()" id="ctxBtn" disabled>Send Update to Agent</button>
+    </div>
+
+    <div class="panel-section" style="border-bottom: none;">
+      <div class="section-label">Hours Check</div>
+      <div id="hoursStatus" style="font-size:12px; color: var(--text-dim); line-height:1.6;">
+        <span id="hoursIcon">🟡</span> <span id="hoursLabel">Checking...</span><br/>
+        <span style="color: var(--text-muted); font-family: 'IBM Plex Mono', monospace; font-size: 11px;" id="localTime"></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="right-panel">
+    <div class="feed-header">
+      <span class="feed-title">Conversation Feed</span>
+      <span class="conv-id" id="convIdDisplay">—</span>
+    </div>
+
+    <div class="feed" id="feed">
+      <div class="empty-state" id="emptyState">
+        <div class="empty-icon">📡</div>
+        <div>Connect to a conversation to begin monitoring</div>
+      </div>
+    </div>
+
+    <div class="takeover-banner" id="takeoverBanner">
+      👤 Human takeover active — you are now speaking directly to the patient
+    </div>
+
+    <div class="input-area">
+      <div class="input-row">
+        <textarea id="msgInput" placeholder="Type a message as human operator..." disabled
+          onkeydown="handleKeydown(event)"></textarea>
+        <button class="send-btn" id="sendBtn" onclick="sendHumanMessage()" disabled>↑</button>
+      </div>
+      <div class="input-hint" id="inputHint">Enable human takeover to send messages to the patient</div>
+    </div>
+
+    <div class="raw-log">
+      <div class="raw-log-header">
+        <span class="raw-log-title">Raw Event Log</span>
+        <span style="font-size:11px; color: var(--text-muted);" id="eventCount">0 events</span>
+      </div>
+      <div class="raw-log-body" id="rawLog"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  let ws = null;
+  let isTakeover = false;
+  let isConnected = false;
+  let eventCount = 0;
+
+  function checkHours() {
+    const now = new Date();
+    const pt = new Date(now.toLocaleString('en-US', { timeZone: 'America/Los_Angeles' }));
+    const day = pt.getDay();
+    const hour = pt.getHours();
+    const timeStr = pt.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', timeZoneName: 'short', timeZone: 'America/Los_Angeles' });
+    document.getElementById('localTime').textContent = timeStr;
+    const inHours = day >= 1 && day <= 5 && hour >= 9 && hour < 17;
+    document.getElementById('hoursIcon').textContent = inHours ? '🟢' : '🔴';
+    document.getElementById('hoursLabel').textContent = inHours ? 'Within business hours' : 'Outside business hours';
+  }
+
+  checkHours();
+  setInterval(checkHours, 30000);
+
+  function setStatus(state) {
+    const pill = document.getElementById('statusPill');
+    const dot = pill.querySelector('.dot');
+    const text = document.getElementById('statusText');
+    pill.className = 'status-pill ' + state;
+    dot.className = 'dot' + (state === 'connected' || state === 'takeover' ? ' pulse' : '');
+    const labels = { disconnected: 'DISCONNECTED', connecting: 'CONNECTING...', connected: 'MONITORING', takeover: 'HUMAN ACTIVE' };
+    text.textContent = labels[state] || state.toUpperCase();
+  }
+
+  function addMessage(type, text, timestamp) {
+    const feed = document.getElementById('feed');
+    document.getElementById('emptyState')?.remove();
+    const ts = timestamp || new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    const labels = { agent: 'AI AGENT', user: 'PATIENT', human: 'YOU (HUMAN)', system: 'SYSTEM' };
+
+    if (type === 'event') {
+      const el = document.createElement('div');
+      el.className = 'message event';
+      el.innerHTML = `<div class="msg-event">${text}</div><div class="msg-time">${ts}</div>`;
+      feed.appendChild(el);
+    } else {
+      const el = document.createElement('div');
+      el.className = `message ${type}`;
+      el.innerHTML = `
+        <div class="msg-label">${labels[type] || type}</div>
+        <div class="msg-bubble">${escapeHtml(text)}</div>
+        <div class="msg-time">${ts}</div>
+      `;
+      feed.appendChild(el);
+    }
+    feed.scrollTop = feed.scrollHeight;
+  }
+
+  function addRawLog(tag, tagClass, content) {
+    const log = document.getElementById('rawLog');
+    const ts = new Date().toLocaleTimeString('en-US', { hour12: false });
+    const el = document.createElement('div');
+    el.className = 'log-line';
+    el.innerHTML = `<span class="ts">${ts}</span><span class="tag ${tagClass || ''}">[${tag}]</span>${escapeHtml(typeof content === 'object' ? JSON.stringify(content) : content)}`;
+    log.appendChild(el);
+    log.scrollTop = log.scrollHeight;
+    eventCount++;
+    document.getElementById('eventCount').textContent = `${eventCount} events`;
+  }
+
+  function escapeHtml(str) {
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  function connect() {
+    const apiKey = document.getElementById('apiKey').value.trim();
+    const convId = document.getElementById('convId').value.trim();
+
+    if (!apiKey || !convId) {
+      addRawLog('ERROR', 'err', 'API key and Conversation ID are required');
+      return;
+    }
+
+    if (ws) { ws.close(); }
+
+    setStatus('connecting');
+    document.getElementById('convIdDisplay').textContent = convId;
+    document.getElementById('connectBtn').disabled = true;
+
+    addMessage('event', `Connecting to conversation ${convId}...`);
+    addRawLog('WS', '', `Attempting connection to conv ${convId}`);
+
+    simulateConnection(convId);
+  }
+
+  function simulateConnection(convId) {
+    setTimeout(() => {
+      isConnected = true;
+      setStatus('connected');
+      document.getElementById('connectBtn').textContent = 'Disconnect';
+      document.getElementById('connectBtn').disabled = false;
+      document.getElementById('connectBtn').onclick = disconnect;
+      document.getElementById('takeoverBtn').disabled = false;
+      document.getElementById('endCallBtn').disabled = false;
+      document.getElementById('ctxBtn').disabled = false;
+
+      addMessage('event', `✓ Connected — monitoring ${convId}`);
+      addRawLog('WS', 'ok', 'Connection established');
+      addRawLog('EVT', '', '{"type":"conversation_initiated","conversation_id":"' + convId + '"}');
+
+      setTimeout(() => addMessage('agent', "Hi! Thank you for calling CryoFuture. I'm Alex. Can I get your name and date of birth to get started?", '10:32:01 AM'), 1000);
+      setTimeout(() => { addRawLog('EVT', '', '{"type":"agent_response","text":"Hi! Thank you for calling..."}'); }, 1100);
+      setTimeout(() => addMessage('user', "Hi, yes — my name is Sarah Miller, date of birth is March 12th 1989.", '10:32:18 AM'), 3000);
+      setTimeout(() => { addRawLog('EVT', '', '{"type":"user_transcript","text":"Hi, yes — my name is Sarah Miller..."}'); }, 3100);
+      setTimeout(() => addMessage('agent', "Thank you Sarah. I'm just pulling up your profile now. Can you let me know where your specimen is currently stored and where it needs to go?", '10:32:24 AM'), 5000);
+      setTimeout(() => addMessage('user', "Actually — can I speak to a real person? I have some questions I'd rather ask a human.", '10:32:45 AM'), 8000);
+      setTimeout(() => addMessage('agent', "Of course. Let me get someone for you — one moment.", '10:32:47 AM'), 10000);
+      setTimeout(() => { addMessage('event', '⚡ requestLiveAgent tool called — alert sent to team'); addRawLog('TOOL', 'ok', '{"tool":"requestLiveAgent","reason":"Patient requested human agent"}'); }, 10500);
+    }, 800);
+  }
+
+  function disconnect() {
+    if (ws) { ws.close(); ws = null; }
+    isConnected = false;
+    isTakeover = false;
+    setStatus('disconnected');
+    document.getElementById('connectBtn').textContent = 'Connect';
+    document.getElementById('connectBtn').onclick = connect;
+    document.getElementById('takeoverBtn').disabled = true;
+    document.getElementById('takeoverBtn').textContent = '👤 Enable Human Takeover';
+    document.getElementById('endCallBtn').disabled = true;
+    document.getElementById('ctxBtn').disabled = true;
+    document.getElementById('msgInput').disabled = true;
+    document.getElementById('sendBtn').disabled = true;
+    document.getElementById('takeoverBanner').classList.remove('visible');
+    document.getElementById('inputHint').textContent = 'Enable human takeover to send messages to the patient';
+    addMessage('event', 'Disconnected from monitoring session');
+    addRawLog('WS', 'err', 'Connection closed');
+  }
+
+  function toggleTakeover() {
+    if (!isConnected) return;
+    isTakeover = !isTakeover;
+
+    const btn = document.getElementById('takeoverBtn');
+    const banner = document.getElementById('takeoverBanner');
+    const msgInput = document.getElementById('msgInput');
+    const sendBtn = document.getElementById('sendBtn');
+    const hint = document.getElementById('inputHint');
+
+    if (isTakeover) {
+      btn.textContent = '🤖 Return to AI Agent';
+      btn.className = 'btn btn-ghost';
+      banner.classList.add('visible');
+      msgInput.disabled = false;
+      sendBtn.disabled = false;
+      hint.textContent = 'Press Enter to send · Shift+Enter for new line';
+      setStatus('takeover');
+      addMessage('event', '👤 Human takeover enabled — you have control');
+      addRawLog('CMD', 'ok', '{"command_type":"enable_human_takeover"}');
+    } else {
+      btn.textContent = '👤 Enable Human Takeover';
+      btn.className = 'btn btn-purple';
+      banner.classList.remove('visible');
+      msgInput.disabled = true;
+      sendBtn.disabled = true;
+      hint.textContent = 'Enable human takeover to send messages to the patient';
+      setStatus('connected');
+      addMessage('event', '🤖 AI agent resumed control');
+      addRawLog('CMD', 'ok', '{"command_type":"disable_human_takeover"}');
+    }
+  }
+
+  function sendHumanMessage() {
+    const input = document.getElementById('msgInput');
+    const text = input.value.trim();
+    if (!text || !isTakeover) return;
+    addMessage('human', text);
+    addRawLog('CMD', 'ok', '{"command_type":"send_human_message","parameters":{"text":"' + text.replace(/"/g, '\\"') + '"}}');
+    input.value = '';
+    input.style.height = '42px';
+  }
+
+  function sendContextualUpdate() {
+    const input = document.getElementById('ctxInput');
+    const text = input.value.trim();
+    if (!text || !isConnected) return;
+    addMessage('event', `📝 Context injected: "${text.substring(0, 60)}${text.length > 60 ? '...' : ''}"`);
+    addRawLog('CMD', 'ok', '{"command_type":"contextual_update","parameters":{"contextual_update":"' + text.replace(/"/g, '\\"') + '"}}');
+    input.value = '';
+  }
+
+  function endCall() {
+    if (!isConnected) return;
+    addMessage('event', '✕ End call command sent');
+    addRawLog('CMD', 'ok', '{"command_type":"end_call"}');
+    setTimeout(() => disconnect(), 600);
+  }
+
+  function handleKeydown(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendHumanMessage();
+    }
+    const ta = e.target;
+    ta.style.height = 'auto';
+    ta.style.height = Math.min(ta.scrollHeight, 120) + 'px';
+  }
+</script>
+</body>
+</html>
