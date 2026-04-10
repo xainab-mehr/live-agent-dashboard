@@ -598,7 +598,7 @@
       return;
     }
  
-    if (ws) { ws.close(); }
+    if (ws) { ws.close(); ws = null; }
  
     setStatus('connecting');
     document.getElementById('convIdDisplay').textContent = convId;
@@ -607,33 +607,87 @@
     addMessage('event', `Connecting to conversation ${convId}...`);
     addRawLog('WS', '', `Attempting connection to conv ${convId}`);
  
-    simulateConnection(convId);
-  }
+    // Browser WebSockets cannot send custom headers directly.
+    // ElevenLabs supports passing the API key as a query parameter as a fallback.
+    const url = `wss://api.elevenlabs.io/v1/convai/conversations/${convId}/monitor?xi-api-key=${encodeURIComponent(apiKey)}`;
  
-  function simulateConnection(convId) {
-    setTimeout(() => {
-      isConnected = true;
-      setStatus('connected');
-      document.getElementById('connectBtn').textContent = 'Disconnect';
+    try {
+      ws = new WebSocket(url);
+ 
+      ws.onopen = () => {
+        isConnected = true;
+        setStatus('connected');
+        document.getElementById('connectBtn').textContent = 'Disconnect';
+        document.getElementById('connectBtn').disabled = false;
+        document.getElementById('connectBtn').onclick = disconnect;
+        document.getElementById('takeoverBtn').disabled = false;
+        document.getElementById('endCallBtn').disabled = false;
+        document.getElementById('ctxBtn').disabled = false;
+        addMessage('event', `✓ Connected — monitoring ${convId}`);
+        addRawLog('WS', 'ok', 'Connection established');
+      };
+ 
+      ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          addRawLog('EVT', '', event.data);
+ 
+          // Route incoming events to the conversation feed
+          const type = data.type;
+ 
+          if (type === 'agent_response' || type === 'agent_response_correction') {
+            const text = data.agent_response || data.message || data.text || '';
+            if (text) addMessage('agent', text);
+ 
+          } else if (type === 'user_transcript') {
+            const text = data.user_transcript || data.message || data.text || '';
+            if (text) addMessage('user', text);
+ 
+          } else if (type === 'interruption') {
+            addMessage('event', '✋ Patient interrupted agent');
+ 
+          } else if (type === 'conversation_initiation_metadata') {
+            addMessage('event', `📋 Conversation metadata received`);
+ 
+          } else if (type === 'tool_call' || type === 'client_tool_call') {
+            const toolName = data.tool_name || data.name || 'unknown tool';
+            addMessage('event', `🔧 Tool called: ${toolName}`);
+ 
+          } else if (type === 'tool_result' || type === 'client_tool_result') {
+            addMessage('event', `✅ Tool result received`);
+ 
+          } else if (type === 'conversation_ended' || type === 'hang_up') {
+            addMessage('event', '📵 Conversation ended');
+            disconnect();
+          }
+ 
+        } catch (e) {
+          addRawLog('ERROR', 'err', `Failed to parse message: ${event.data}`);
+        }
+      };
+ 
+      ws.onerror = (error) => {
+        addRawLog('ERROR', 'err', 'WebSocket error — check API key and conversation ID');
+        addMessage('event', '❌ Connection error — check API key and that the conversation is active');
+        setStatus('disconnected');
+        document.getElementById('connectBtn').textContent = 'Connect';
+        document.getElementById('connectBtn').disabled = false;
+        document.getElementById('connectBtn').onclick = connect;
+      };
+ 
+      ws.onclose = (event) => {
+        if (isConnected) {
+          addMessage('event', `Disconnected (code: ${event.code})`);
+          addRawLog('WS', 'err', `Connection closed — code: ${event.code}`);
+          disconnect();
+        }
+      };
+ 
+    } catch (e) {
+      addRawLog('ERROR', 'err', `Failed to create WebSocket: ${e.message}`);
+      setStatus('disconnected');
       document.getElementById('connectBtn').disabled = false;
-      document.getElementById('connectBtn').onclick = disconnect;
-      document.getElementById('takeoverBtn').disabled = false;
-      document.getElementById('endCallBtn').disabled = false;
-      document.getElementById('ctxBtn').disabled = false;
- 
-      addMessage('event', `✓ Connected — monitoring ${convId}`);
-      addRawLog('WS', 'ok', 'Connection established');
-      addRawLog('EVT', '', '{"type":"conversation_initiated","conversation_id":"' + convId + '"}');
- 
-      setTimeout(() => addMessage('agent', "Hi! Thank you for calling CryoFuture. I'm Alex. Can I get your name and date of birth to get started?", '10:32:01 AM'), 1000);
-      setTimeout(() => { addRawLog('EVT', '', '{"type":"agent_response","text":"Hi! Thank you for calling..."}'); }, 1100);
-      setTimeout(() => addMessage('user', "Hi, yes — my name is Sarah Miller, date of birth is March 12th 1989.", '10:32:18 AM'), 3000);
-      setTimeout(() => { addRawLog('EVT', '', '{"type":"user_transcript","text":"Hi, yes — my name is Sarah Miller..."}'); }, 3100);
-      setTimeout(() => addMessage('agent', "Thank you Sarah. I'm just pulling up your profile now. Can you let me know where your specimen is currently stored and where it needs to go?", '10:32:24 AM'), 5000);
-      setTimeout(() => addMessage('user', "Actually — can I speak to a real person? I have some questions I'd rather ask a human.", '10:32:45 AM'), 8000);
-      setTimeout(() => addMessage('agent', "Of course. Let me get someone for you — one moment.", '10:32:47 AM'), 10000);
-      setTimeout(() => { addMessage('event', '⚡ requestLiveAgent tool called — alert sent to team'); addRawLog('TOOL', 'ok', '{"tool":"requestLiveAgent","reason":"Patient requested human agent"}'); }, 10500);
-    }, 800);
+    }
   }
  
   function disconnect() {
@@ -643,16 +697,26 @@
     setStatus('disconnected');
     document.getElementById('connectBtn').textContent = 'Connect';
     document.getElementById('connectBtn').onclick = connect;
+    document.getElementById('connectBtn').disabled = false;
     document.getElementById('takeoverBtn').disabled = true;
     document.getElementById('takeoverBtn').textContent = '👤 Enable Human Takeover';
+    document.getElementById('takeoverBtn').className = 'btn btn-purple';
     document.getElementById('endCallBtn').disabled = true;
     document.getElementById('ctxBtn').disabled = true;
     document.getElementById('msgInput').disabled = true;
     document.getElementById('sendBtn').disabled = true;
     document.getElementById('takeoverBanner').classList.remove('visible');
     document.getElementById('inputHint').textContent = 'Enable human takeover to send messages to the patient';
-    addMessage('event', 'Disconnected from monitoring session');
-    addRawLog('WS', 'err', 'Connection closed');
+  }
+ 
+  function sendCommand(payload) {
+    if (!ws || ws.readyState !== WebSocket.OPEN) {
+      addRawLog('ERROR', 'err', 'WebSocket not connected');
+      return false;
+    }
+    ws.send(JSON.stringify(payload));
+    addRawLog('CMD', 'ok', JSON.stringify(payload));
+    return true;
   }
  
   function toggleTakeover() {
@@ -666,6 +730,8 @@
     const hint = document.getElementById('inputHint');
  
     if (isTakeover) {
+      const sent = sendCommand({ command_type: 'enable_human_takeover' });
+      if (!sent) { isTakeover = false; return; }
       btn.textContent = '🤖 Return to AI Agent';
       btn.className = 'btn btn-ghost';
       banner.classList.add('visible');
@@ -674,8 +740,8 @@
       hint.textContent = 'Press Enter to send · Shift+Enter for new line';
       setStatus('takeover');
       addMessage('event', '👤 Human takeover enabled — you have control');
-      addRawLog('CMD', 'ok', '{"command_type":"enable_human_takeover"}');
     } else {
+      sendCommand({ command_type: 'disable_human_takeover' });
       btn.textContent = '👤 Enable Human Takeover';
       btn.className = 'btn btn-purple';
       banner.classList.remove('visible');
@@ -684,7 +750,6 @@
       hint.textContent = 'Enable human takeover to send messages to the patient';
       setStatus('connected');
       addMessage('event', '🤖 AI agent resumed control');
-      addRawLog('CMD', 'ok', '{"command_type":"disable_human_takeover"}');
     }
   }
  
@@ -692,25 +757,29 @@
     const input = document.getElementById('msgInput');
     const text = input.value.trim();
     if (!text || !isTakeover) return;
-    addMessage('human', text);
-    addRawLog('CMD', 'ok', '{"command_type":"send_human_message","parameters":{"text":"' + text.replace(/"/g, '\\"') + '"}}');
-    input.value = '';
-    input.style.height = '42px';
+    const sent = sendCommand({ command_type: 'send_human_message', parameters: { text } });
+    if (sent) {
+      addMessage('human', text);
+      input.value = '';
+      input.style.height = '42px';
+    }
   }
  
   function sendContextualUpdate() {
     const input = document.getElementById('ctxInput');
     const text = input.value.trim();
     if (!text || !isConnected) return;
-    addMessage('event', `📝 Context injected: "${text.substring(0, 60)}${text.length > 60 ? '...' : ''}"`);
-    addRawLog('CMD', 'ok', '{"command_type":"contextual_update","parameters":{"contextual_update":"' + text.replace(/"/g, '\\"') + '"}}');
-    input.value = '';
+    const sent = sendCommand({ command_type: 'contextual_update', parameters: { contextual_update: text } });
+    if (sent) {
+      addMessage('event', `📝 Context injected: "${text.substring(0, 60)}${text.length > 60 ? '...' : ''}"`);
+      input.value = '';
+    }
   }
  
   function endCall() {
     if (!isConnected) return;
+    sendCommand({ command_type: 'end_call' });
     addMessage('event', '✕ End call command sent');
-    addRawLog('CMD', 'ok', '{"command_type":"end_call"}');
     setTimeout(() => disconnect(), 600);
   }
  
